@@ -1,20 +1,25 @@
-// app/api/products/[id]/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// PUT - تحديث منتج
+// ================= PUT =================
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const body = await request.json();
-    const { productName, priceUSD, exchangeRate } = body;
-    const priceSYP = priceUSD * exchangeRate;
+
+    const productName = body.productName?.trim();
+    const priceUSD = Number(body.priceUSD);
+    const exchangeRate = Number(body.exchangeRate || 0);
+
+    const priceSYP =
+      exchangeRate > 0 ? priceUSD * exchangeRate : 0;
 
     const product = await prisma.product.update({
-      where: { id: parseInt(id) },
+      where: {
+        id: params.id, // ✅ بدون parseInt
+      },
       data: {
         productName,
         priceUSD,
@@ -24,29 +29,36 @@ export async function PUT(
 
     return NextResponse.json(product);
   } catch (error) {
+    console.error("PUT ERROR:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في تحديث المنتج" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
-// DELETE - حذف منتج
+// ================= DELETE =================
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     await prisma.product.delete({
-      where: { id: parseInt(id) },
+      where: {
+        id: params.id, // ✅ بدون parseInt
+      },
     });
 
-    return NextResponse.json({ message: "تم حذف المنتج بنجاح" });
+    return NextResponse.json({
+      message: "تم حذف المنتج بنجاح",
+    });
   } catch (error) {
+    console.error("DELETE ERROR:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في حذف المنتج" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

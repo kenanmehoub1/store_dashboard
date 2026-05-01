@@ -1,35 +1,45 @@
-// app/api/products/route.ts
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; // تأكد من المسار الصحيح
+import prisma from "@/lib/prisma";
 
+// ================= GET =================
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
+
     return NextResponse.json(products);
   } catch (error) {
-    console.error("خطأ في جلب المنتجات:", error);
+    console.error("GET PRODUCTS ERROR:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في جلب المنتجات" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
+// ================= POST =================
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { productName, priceUSD, exchangeRate } = body;
 
-    if (!productName || !priceUSD) {
+    const productName = body.productName?.trim();
+    const priceUSD = Number(body.priceUSD);
+    const exchangeRate = Number(body.exchangeRate || 0);
+
+    // validation
+    if (!productName || priceUSD <= 0) {
       return NextResponse.json(
-        { error: "اسم المنتج والسعر مطلوبان" },
-        { status: 400 },
+        { error: "بيانات غير صالحة" },
+        { status: 400 }
       );
     }
 
-    const priceSYP = priceUSD * exchangeRate;
+    const priceSYP =
+      exchangeRate > 0 ? priceUSD * exchangeRate : 0;
 
     const product = await prisma.product.create({
       data: {
@@ -41,10 +51,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error("خطأ في إضافة المنتج:", error);
+    console.error("POST PRODUCTS ERROR:", error);
+
     return NextResponse.json(
       { error: "حدث خطأ في إضافة المنتج" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
