@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { supabaseGet, supabasePatch } from "@/lib/supabase/api";
 
 export async function POST(request: Request) {
   try {
@@ -13,14 +13,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update all products using raw query for efficiency
-    await prisma.$executeRaw`
-      UPDATE products
-      SET price_syp = price_usd * ${rate},
-          updated_at = NOW()
-    `;
+    // Fetch all products
+    const products = await supabaseGet("products", "select=*");
 
-    return NextResponse.json({ success: true });
+    // Update each product with new SYP price
+    const updates = products.map((p: any) =>
+      supabasePatch("products", `id=eq.${p.id}`, {
+        price_syp: p.price_usd * rate,
+        updated_at: new Date().toISOString(),
+      })
+    );
+
+    await Promise.all(updates);
+
+    return NextResponse.json({ success: true, updated: products.length });
   } catch (error) {
     console.error("UPDATE RATES ERROR:", error);
     return NextResponse.json(

@@ -17,8 +17,11 @@ import {
   Users,
   ShoppingCart,
   Package,
+  User,
+  LogOut,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LogoutButton } from "@/components/logout-button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -64,9 +67,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex items-center justify-between p-4">
-          <span className="text-sm text-muted-foreground">Theme</span>
-          <ThemeToggle />
+        <div className="flex flex-col gap-3 p-4 border-t">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            <span>المستخدم</span>
+          </div>
+          <LogoutButton />
+          <div className="flex items-center justify-between pt-2 border-t">
+            <span className="text-sm text-muted-foreground">Theme</span>
+            <ThemeToggle />
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>
